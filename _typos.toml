@@ -1,0 +1,21 @@
+[default.extend-words]
+# ServiceNow platform API naming conventions
+parm = "parm"
+parms = "parms"
+harc = "harc"
+abd = "abd"
+ba = "ba"
+tha = "tha"
+vew = "vew"
+obects = "obects"
+
+[files]
+extend-exclude = [
+  "@types/",
+  "author_elective_update/",
+  "update/",
+  "dictionary/",
+  "metadata/",
+  "src/fluent/generated/",
+  "*.xml",
+]
