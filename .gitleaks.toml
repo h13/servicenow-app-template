@@ -1,0 +1,17 @@
+# Gitleaks configuration for ServiceNow SDK projects
+# ServiceNow XML metadata contains sys_id values (32-char hex) that trigger
+# generic-api-key false positives. These are record identifiers, not secrets.
+
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '''update/''',
+  '''author_elective_update/''',
+  '''metadata/''',
+  '''dictionary/''',
+  '''src/fluent/generated/''',
+  '''@types/''',
+  '''sys_app_.*\.xml$''',
+]
