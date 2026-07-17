@@ -1,0 +1,29 @@
+# Template-managed files (whitelist)
+#
+# Only files listed here with :! prefix are synced from the upstream template.
+# Everything else (*) is ignored, protecting user-created files.
+#
+# IMPORTANT: When adding a new file to the template, add it here too.
+
+# CI/CD
+:!.github/workflows/ci.yml
+:!.github/workflows/deploy.yml
+:!.github/workflows/sync-template.yml
+
+# Build & tooling
+:!eslint.config.mjs
+:!tsconfig.json
+:!package.json
+:!.prettierrc
+:!.editorconfig
+:!.mise.toml
+:!renovate.json
+
+# Meta
+:!.templatesyncignore
+:!.gitignore
+:!CONTRIBUTING.md
+:!LICENSE
+
+# Ignore everything else (user files: src/, test/, now.config.json, README.md, etc.)
+*

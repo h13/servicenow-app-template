@@ -1,0 +1,36 @@
+{
+  "name": "servicenow-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "auth": "npx @servicenow/sdk auth",
+    "build": "npx @servicenow/sdk build",
+    "build:ci": "npx @servicenow/sdk build --frozenKeys",
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run test",
+    "clean": "npx @servicenow/sdk clean",
+    "dependencies": "npx @servicenow/sdk dependencies",
+    "deploy": "pnpm run build && pnpm run install:instance",
+    "download": "npx @servicenow/sdk download .",
+    "format": "prettier --write .",
+    "install:instance": "npx @servicenow/sdk install",
+    "lint": "eslint --fix --no-error-on-unmatched-pattern src/ test/",
+    "pack": "npx @servicenow/sdk pack",
+    "test": "vitest run --passWithNoTests",
+    "transform": "npx @servicenow/sdk transform --from .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.28.0",
+    "eslint": "9.28.0",
+    "eslint-config-prettier": "10.1.5",
+    "prettier": "3.5.3",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.33.0",
+    "vitest": "3.2.1"
+  },
+  "packageManager": "pnpm@10.12.1",
+  "engines": {
+    "node": ">=22"
+  }
+}

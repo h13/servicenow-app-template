@@ -1,0 +1,5 @@
+{
+  "scope": "x_yourcompany_yourapp",
+  "name": "Your App Name",
+  "tsconfigPath": "./src/server/tsconfig.json"
+}
