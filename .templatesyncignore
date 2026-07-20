@@ -23,6 +23,7 @@
 :!.templatesyncignore
 :!.gitignore
 :!.gitleaks.toml
+:!.prettierignore
 :!_typos.toml
 :!CONTRIBUTING.md
 :!LICENSE
