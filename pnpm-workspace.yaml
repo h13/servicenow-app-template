@@ -1,0 +1,10 @@
+# pnpm v11 requires an explicit build-script policy for dependencies that ship
+# lifecycle scripts (ERR_PNPM_IGNORED_BUILDS otherwise). These native deps are
+# pulled transitively (mainly via @servicenow/sdk) and were never built under
+# pnpm v10, so we keep them denied — no build scripts run at install time.
+# Flip a value to `true` only after reviewing that package's build script.
+allowBuilds:
+  '@parcel/watcher': false
+  '@swc/core': false
+  esbuild: false
+  libxmljs2: false
