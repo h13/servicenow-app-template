@@ -39,16 +39,17 @@ The [ServiceNow SDK](https://servicenow.github.io/sdk/) makes this possible by l
 
 ## What's Included
 
-| Category      | Tools                                           |
-| ------------- | ----------------------------------------------- |
-| Language      | TypeScript (strict mode)                        |
-| SDK           | ServiceNow SDK (Fluent DSL + server scripts)    |
-| Linting       | ESLint + Prettier                               |
-| Testing       | Vitest                                          |
-| Type checking | `tsc --noEmit`                                  |
-| CI/CD         | GitHub Actions (build validation + auto-deploy) |
-| Dependencies  | Renovate (auto-update via h13/renovate-config)  |
-| Template sync | Weekly upstream sync (tooling updates auto-PR)  |
+| Category      | Tools                                                |
+| ------------- | ---------------------------------------------------- |
+| Language      | TypeScript (strict mode)                             |
+| SDK           | ServiceNow SDK (Fluent DSL + server scripts)         |
+| Linting       | ESLint + Prettier                                    |
+| Testing       | Vitest                                               |
+| Type checking | `tsc --noEmit`                                       |
+| CI/CD         | GitHub Actions (build validation + auto-deploy)      |
+| Dependencies  | Renovate (auto-update via h13/renovate-config)       |
+| Template sync | Weekly upstream sync (tooling updates auto-PR)       |
+| Example code  | CI-verified business rule + unit tests (`examples/`) |
 
 ## Quick Start
 
@@ -106,6 +107,34 @@ Create a `dev` environment in repo Settings → Environments with:
 | `SN_SDK_USER`         | Service account username |
 | `SN_SDK_USER_PWD`     | Service account password |
 
+**Service account hygiene:** use a dedicated service account, not a personal
+one — it makes auditing, rotation, and narrowing roles straightforward.
+Installing an app requires admin-level rights on the target instance, so scope
+the account to the dev instance only and rotate the password regularly.
+
+<details>
+<summary><b>Prefer OAuth over basic auth (recommended where possible)</b></summary>
+
+The SDK also supports the OAuth 2.0 `client_credentials` grant in CI — no user
+password ever leaves your secret store, and rotating means rotating a client
+secret instead of a password.
+
+1. On the instance: **System OAuth → Application Registry → New → Create an
+   OAuth API endpoint for external clients**. Set _Public Client_ to `false`,
+   map an _OAuth Application User_ (a dedicated `sys_user` with
+   _Identity Type = Human_ and roles sufficient to install apps), and enable
+   the _Client Credentials_ grant type.
+2. Set the system property
+   `glide.oauth.inbound.client.credential.grant_type.enabled` to `true`
+   (create it in `sys_properties` if missing — see ServiceNow KB1645212).
+3. In the `dev` environment: add the **variable** `SN_SDK_AUTH_TYPE=oauth`
+   and the secrets `SN_SDK_OAUTH_CLIENT_ID` / `SN_SDK_OAUTH_CLIENT_SECRET`
+   (replacing `SN_SDK_USER` / `SN_SDK_USER_PWD`).
+
+`deploy.yml` picks up the switch automatically.
+
+</details>
+
 ## Development Workflow
 
 ```bash
@@ -151,6 +180,22 @@ ServiceNow's platform expects production deployments to go through the [App Repo
 - Dependency validation
 
 CI deploys to dev. Production promotion is a deliberate, auditable act.
+
+### Promoting to production
+
+Once a `main` build has been verified on the dev instance:
+
+1. **Publish** — on the dev instance, open **All → System Applications →
+   My Company Applications** (or Studio/App Manager), select the app, bump
+   the version number, and click **Publish to Application Repository**.
+2. **Install / Upgrade** — on the prod instance, open **Application Manager**,
+   find the app, and install or upgrade to the published version. Tie this
+   step to your Change Management process.
+3. **Rollback** — if something goes wrong, install the previous version from
+   the App Repo the same way.
+
+Tag the corresponding commit (`git tag v1.2.0 && git push --tags`) so the Git
+history and the App Repo version line up.
 
 ### Release Flow
 
@@ -225,6 +270,7 @@ your-app/
 │   └── server/
 │       ├── tsconfig.json          # Server-side TypeScript config
 │       └── scripts/               # Server-side scripts
+├── examples/                      # CI-verified sample code (not deployed)
 ├── test/                          # Vitest tests
 ├── metadata/                      # XML metadata (Fluent-unsupported)
 ├── .github/workflows/
@@ -238,13 +284,25 @@ your-app/
 └── renovate.json
 ```
 
+### Example code
+
+[`examples/`](examples/) contains a working business rule that demonstrates
+the recommended layering: pure logic (`utils/`, unit-tested with Vitest, no
+Glide APIs) → a thin Glide-facing wrapper (`business-rules/`, tested against
+a stub record) → Fluent wiring (`fluent/`, the `BusinessRule` declaration).
+
+The examples are type-checked, linted, and tested by CI on every push, but
+live outside `src/` so they are never built into or deployed with your app.
+See [`examples/README.md`](examples/README.md) for how to adopt (or delete)
+them.
+
 ## Keeping Repos in Sync
 
 ### Template Sync
 
 The `sync-template.yml` workflow checks for upstream template updates weekly. When updates are found, a PR with the `template-sync` label is created automatically.
 
-`.templatesyncignore` uses a whitelist format — only listed files are synced. Your source code, tests, `now.config.json`, and `README.md` are never overwritten.
+`.templatesyncignore` uses a whitelist format — only listed files (workflows, tooling configs, and `examples/`) are synced. Your source code, tests, `now.config.json`, and `README.md` are never overwritten.
 
 ### Renovate
 
@@ -273,6 +331,17 @@ No. The SDK CLI is all you need. Use any editor you like.
 ### Can multiple developers work on the same app?
 
 Yes — that's the point. Branch, PR, merge. `keys.ts` ensures everyone's `sys_id` mappings stay consistent.
+
+### Is Vitest enough? What about ATF?
+
+They cover different layers. Vitest tests pure logic locally — fast, no
+instance needed (see [`examples/`](examples/) for the pattern). Behavior that
+only exists on the platform — ACLs, business rule execution order, forms,
+REST endpoints — belongs in the [Automated Test Framework](https://www.servicenow.com/docs/r/application-development/automated-test-framework.html).
+The SDK's Fluent `Test()` API lets you define ATF tests as code in
+`src/fluent/`, so they are versioned and reviewed like everything else. Keep
+the pyramid: many fast Vitest units for logic, fewer ATF tests for platform
+behavior.
 
 ## License
 

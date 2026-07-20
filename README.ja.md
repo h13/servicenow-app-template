@@ -39,16 +39,17 @@
 
 ## 含まれるもの
 
-| カテゴリ     | ツール                                            |
-| ------------ | ------------------------------------------------- |
-| 言語         | TypeScript（strict モード）                       |
-| SDK          | ServiceNow SDK（Fluent DSL + サーバースクリプト） |
-| リント       | ESLint + Prettier                                 |
-| テスト       | Vitest                                            |
-| 型チェック   | `tsc --noEmit`                                    |
-| CI/CD        | GitHub Actions（ビルド検証 + 自動デプロイ）       |
-| 依存管理     | Renovate（h13/renovate-config による自動更新）    |
-| テンプレ同期 | 週次の上流同期（ツーリング更新を自動 PR）         |
+| カテゴリ     | ツール                                                  |
+| ------------ | ------------------------------------------------------- |
+| 言語         | TypeScript（strict モード）                             |
+| SDK          | ServiceNow SDK（Fluent DSL + サーバースクリプト）       |
+| リント       | ESLint + Prettier                                       |
+| テスト       | Vitest                                                  |
+| 型チェック   | `tsc --noEmit`                                          |
+| CI/CD        | GitHub Actions（ビルド検証 + 自動デプロイ）             |
+| 依存管理     | Renovate（h13/renovate-config による自動更新）          |
+| テンプレ同期 | 週次の上流同期（ツーリング更新を自動 PR）               |
+| サンプル     | CI 検証済みのビジネスルール + 単体テスト（`examples/`） |
 
 ## クイックスタート
 
@@ -106,6 +107,34 @@ pnpm run build
 | `SN_SDK_USER`         | サービスアカウントのユーザー名 |
 | `SN_SDK_USER_PWD`     | サービスアカウントのパスワード |
 
+**サービスアカウントの運用:** 個人アカウントではなく専用のサービスアカウントを
+使ってください — 監査・ローテーション・権限の絞り込みが容易になります。アプリの
+インストールには対象インスタンスの管理者相当の権限が必要なため、アカウントは
+dev インスタンスのみに限定し、パスワードは定期的にローテーションしてください。
+
+<details>
+<summary><b>可能なら OAuth を推奨（basic 認証の代替）</b></summary>
+
+SDK は CI での OAuth 2.0 `client_credentials` グラントもサポートしています。
+ユーザーパスワードがシークレットストアの外に出ることがなく、ローテーションも
+パスワードではなくクライアントシークレットの差し替えで済みます。
+
+1. インスタンス側: **System OAuth → Application Registry → New → Create an
+   OAuth API endpoint for external clients** を作成。_Public Client_ を `false`
+   にし、_OAuth Application User_ に専用の `sys_user`（_Identity Type = Human_、
+   アプリインストールに十分なロール付き）をマッピングし、_Client Credentials_
+   グラントタイプを有効化。
+2. システムプロパティ
+   `glide.oauth.inbound.client.credential.grant_type.enabled` を `true` に設定
+   （存在しない場合は `sys_properties` に作成 — ServiceNow KB1645212 参照）。
+3. `dev` environment に **variable** `SN_SDK_AUTH_TYPE=oauth` と、secrets
+   `SN_SDK_OAUTH_CLIENT_ID` / `SN_SDK_OAUTH_CLIENT_SECRET` を設定
+   （`SN_SDK_USER` / `SN_SDK_USER_PWD` は不要）。
+
+`deploy.yml` は自動的に切り替わります。
+
+</details>
+
 ## 開発ワークフロー
 
 ```bash
@@ -151,6 +180,23 @@ ServiceNow のプラットフォームは、本番デプロイを [App Repo](htt
 - 依存関係の検証
 
 CI は dev にデプロイします。本番への昇格は意図的で監査可能な行為です。
+
+### 本番への昇格手順
+
+`main` のビルドを dev インスタンスで検証したら：
+
+1. **Publish** — dev インスタンスで **All → System Applications →
+   My Company Applications**（または Studio / App Manager）を開き、アプリを
+   選択してバージョン番号を上げ、**Publish to Application Repository** を
+   クリック。
+2. **Install / Upgrade** — prod インスタンスの **Application Manager** で
+   アプリを検索し、公開したバージョンをインストール／アップグレード。この
+   ステップは Change Management のプロセスに紐づけてください。
+3. **ロールバック** — 問題が起きたら、同じ手順で App Repo から前バージョンを
+   インストール。
+
+対応するコミットにタグを打っておくと（`git tag v1.2.0 && git push --tags`）、
+Git 履歴と App Repo のバージョンが対応づきます。
 
 ### リリースフロー
 
@@ -225,6 +271,7 @@ your-app/
 │   └── server/
 │       ├── tsconfig.json          # サーバーサイド TypeScript 設定
 │       └── scripts/               # サーバーサイドスクリプト
+├── examples/                      # CI 検証済みサンプル（デプロイ対象外）
 ├── test/                          # Vitest テスト
 ├── metadata/                      # XML メタデータ（Fluent 未対応）
 ├── .github/workflows/
@@ -238,13 +285,24 @@ your-app/
 └── renovate.json
 ```
 
+### サンプルコード
+
+[`examples/`](examples/) には、推奨するレイヤリングを示す動くビジネスルールが
+入っています：純粋ロジック（`utils/` — Glide API 非依存、Vitest で単体テスト）
+→ 薄い Glide ラッパー（`business-rules/` — スタブレコードでテスト）→ Fluent
+配線（`fluent/` — `BusinessRule` 宣言）。
+
+サンプルは push のたびに CI で型チェック・リント・テストされますが、`src/` の
+外にあるためビルド・デプロイには含まれません。導入方法（と削除方法）は
+[`examples/README.md`](examples/README.md) を参照してください。
+
 ## リポジトリの同期
 
 ### Template Sync
 
 `sync-template.yml` ワークフローが週次で上流テンプレートの更新をチェックします。更新がある場合、`template-sync` ラベル付きの PR が自動作成されます。
 
-`.templatesyncignore` はホワイトリスト形式 — リストされたファイルのみが同期対象です。ソースコード、テスト、`now.config.json`、`README.md` は上書きされません。
+`.templatesyncignore` はホワイトリスト形式 — リストされたファイル（ワークフロー、ツーリング設定、`examples/`）のみが同期対象です。ソースコード、テスト、`now.config.json`、`README.md` は上書きされません。
 
 ### Renovate
 
@@ -273,6 +331,17 @@ your-app/
 ### 複数の開発者が同じアプリを開発できる？
 
 はい — それがこのテンプレートの目的です。ブランチを切り、PR を出し、マージする。`keys.ts` が全員の `sys_id` マッピングの一貫性を保証します。
+
+### Vitest だけで十分？ATF は？
+
+カバーする層が違います。Vitest は純粋ロジックをローカルでテストします —
+高速で、インスタンス不要です（パターンは [`examples/`](examples/) 参照）。
+プラットフォーム上でしか存在しない挙動 — ACL、ビジネスルールの実行順序、
+フォーム、REST エンドポイント — は [Automated Test Framework](https://www.servicenow.com/docs/r/application-development/automated-test-framework.html)
+の領域です。SDK の Fluent `Test()` API を使えば ATF テストも `src/fluent/` に
+コードとして定義でき、他のすべてと同様にバージョン管理・レビューできます。
+テストピラミッドを保ちましょう：ロジックは多数の高速な Vitest ユニット、
+プラットフォーム挙動は少数の ATF テスト。
 
 ## ライセンス
 

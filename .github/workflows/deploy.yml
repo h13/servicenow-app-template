@@ -30,8 +30,12 @@ jobs:
       - name: Install to instance
         env:
           SN_SDK_NODE_ENV: SN_SDK_CI_INSTALL
-          SN_SDK_AUTH_TYPE: basic
+          # Set the SN_SDK_AUTH_TYPE environment *variable* to `oauth` on the
+          # `dev` environment to switch to OAuth client_credentials (see README).
+          SN_SDK_AUTH_TYPE: ${{ vars.SN_SDK_AUTH_TYPE || 'basic' }}
+          SN_SDK_INSTANCE_URL: ${{ secrets.SN_SDK_INSTANCE_URL }}
           SN_SDK_USER: ${{ secrets.SN_SDK_USER }}
           SN_SDK_USER_PWD: ${{ secrets.SN_SDK_USER_PWD }}
-          SN_SDK_INSTANCE_URL: ${{ secrets.SN_SDK_INSTANCE_URL }}
+          SN_SDK_OAUTH_CLIENT_ID: ${{ secrets.SN_SDK_OAUTH_CLIENT_ID }}
+          SN_SDK_OAUTH_CLIENT_SECRET: ${{ secrets.SN_SDK_OAUTH_CLIENT_SECRET }}
         run: pnpm run install:instance
