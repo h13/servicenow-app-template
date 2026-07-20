@@ -33,7 +33,7 @@ This template brings ServiceNow app development into the same workflow you use f
 - **Git-based source control** — every change is a commit, every feature is a branch
 - **Pull request workflow** — code review before anything reaches the instance
 - **CI/CD pipeline** — automated build validation + deployment
-- **Modern tooling** — TypeScript, ESLint, Prettier, Vitest
+- **Modern tooling** — TypeScript, Oxlint, Oxfmt, Vitest
 
 The [ServiceNow SDK](https://servicenow.github.io/sdk/) makes this possible by letting you author app metadata as code (Fluent DSL) and server-side scripts as TypeScript, then compile and deploy via CLI.
 
@@ -43,7 +43,8 @@ The [ServiceNow SDK](https://servicenow.github.io/sdk/) makes this possible by l
 | ------------- | ---------------------------------------------------- |
 | Language      | TypeScript (strict mode)                             |
 | SDK           | ServiceNow SDK (Fluent DSL + server scripts)         |
-| Linting       | ESLint + Prettier                                    |
+| Linting       | Oxlint                                               |
+| Formatting    | Oxfmt                                                |
 | Testing       | Vitest                                               |
 | Type checking | `tsc --noEmit`                                       |
 | CI/CD         | GitHub Actions (build validation + auto-deploy)      |
@@ -246,10 +247,10 @@ Merge to main  →  Deploy
 | `pnpm run check`            | Lint + typecheck + test (run before committing) |
 | `pnpm run build`            | ServiceNow SDK build                            |
 | `pnpm run build:ci`         | Build with `--frozenKeys` validation            |
-| `pnpm run lint`             | ESLint with auto-fix                            |
+| `pnpm run lint`             | Oxlint with auto-fix                            |
 | `pnpm run typecheck`        | TypeScript type checking                        |
 | `pnpm run test`             | Run tests with Vitest                           |
-| `pnpm run format`           | Format with Prettier                            |
+| `pnpm run format`           | Format with Oxfmt                               |
 | `pnpm run install:instance` | Deploy to authenticated instance                |
 | `pnpm run deploy`           | Build + install (one command)                   |
 | `pnpm run transform`        | Convert XML metadata to Fluent                  |
@@ -280,7 +281,8 @@ your-app/
 ├── now.config.json                # App scope & metadata
 ├── package.json
 ├── tsconfig.json
-├── eslint.config.mjs
+├── .oxlintrc.json
+├── .oxfmtrc.json
 └── renovate.json
 ```
 
