@@ -27,5 +27,13 @@
 :!CONTRIBUTING.md
 :!LICENSE
 
+# Examples (template-managed — copy into src/ to adopt)
+:!examples/README.md
+:!examples/fluent/business-rules/set-priority.now.ts
+:!examples/server/business-rules/set-priority.ts
+:!examples/server/business-rules/set-priority.test.ts
+:!examples/server/utils/resolve-priority.ts
+:!examples/server/utils/resolve-priority.test.ts
+
 # Ignore everything else (user files: src/, test/, now.config.json, README.md, etc.)
 *

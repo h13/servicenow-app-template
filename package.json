@@ -14,7 +14,7 @@
     "download": "now-sdk download .",
     "format": "prettier --write .",
     "install:instance": "now-sdk install",
-    "lint": "eslint --fix --no-error-on-unmatched-pattern src/ test/",
+    "lint": "eslint --fix --no-error-on-unmatched-pattern src/ test/ examples/",
     "pack": "now-sdk pack",
     "test": "vitest run --passWithNoTests",
     "transform": "now-sdk transform --from .",
