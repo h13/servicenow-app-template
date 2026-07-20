@@ -11,11 +11,11 @@
 :!.github/workflows/sync-template.yml
 
 # Build & tooling
-:!eslint.config.mjs
+:!.oxlintrc.json
+:!.oxfmtrc.json
 :!tsconfig.json
 :!package.json
 :!pnpm-workspace.yaml
-:!.prettierrc
 :!.editorconfig
 :!.mise.toml
 :!renovate.json
@@ -24,7 +24,6 @@
 :!.templatesyncignore
 :!.gitignore
 :!.gitleaks.toml
-:!.prettierignore
 :!_typos.toml
 :!CONTRIBUTING.md
 :!LICENSE

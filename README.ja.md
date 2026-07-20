@@ -33,7 +33,7 @@
 - **Git ベースのソース管理** — すべての変更はコミット、すべての機能はブランチ
 - **プルリクエストワークフロー** — インスタンスに届く前にコードレビュー
 - **CI/CD パイプライン** — ビルド検証 + デプロイの自動化
-- **モダンなツール** — TypeScript、ESLint、Prettier、Vitest
+- **モダンなツール** — TypeScript、Oxlint、Oxfmt、Vitest
 
 [ServiceNow SDK](https://servicenow.github.io/sdk/) がこれを可能にします。アプリのメタデータを Fluent DSL でコードとして記述し、サーバーサイドスクリプトを TypeScript で書き、CLI でコンパイル・デプロイします。
 
@@ -43,7 +43,8 @@
 | ------------ | ------------------------------------------------------- |
 | 言語         | TypeScript（strict モード）                             |
 | SDK          | ServiceNow SDK（Fluent DSL + サーバースクリプト）       |
-| リント       | ESLint + Prettier                                       |
+| リント       | Oxlint                                                  |
+| フォーマット | Oxfmt                                                   |
 | テスト       | Vitest                                                  |
 | 型チェック   | `tsc --noEmit`                                          |
 | CI/CD        | GitHub Actions（ビルド検証 + 自動デプロイ）             |
@@ -247,10 +248,10 @@ main マージ  →  Deploy
 | `pnpm run check`            | lint + typecheck + test（コミット前に実行） |
 | `pnpm run build`            | ServiceNow SDK ビルド                       |
 | `pnpm run build:ci`         | `--frozenKeys` 検証付きビルド               |
-| `pnpm run lint`             | ESLint（自動修正付き）                      |
+| `pnpm run lint`             | Oxlint（自動修正付き）                      |
 | `pnpm run typecheck`        | TypeScript 型チェック                       |
 | `pnpm run test`             | Vitest でテスト実行                         |
-| `pnpm run format`           | Prettier でフォーマット                     |
+| `pnpm run format`           | Oxfmt でフォーマット                        |
 | `pnpm run install:instance` | 認証済みインスタンスへデプロイ              |
 | `pnpm run deploy`           | ビルド + インストール（一括）               |
 | `pnpm run transform`        | XML メタデータを Fluent に変換              |
@@ -281,7 +282,8 @@ your-app/
 ├── now.config.json                # アプリスコープ・メタデータ
 ├── package.json
 ├── tsconfig.json
-├── eslint.config.mjs
+├── .oxlintrc.json
+├── .oxfmtrc.json
 └── renovate.json
 ```
 
