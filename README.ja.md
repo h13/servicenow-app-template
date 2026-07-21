@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/h13/servicenow-app-template/actions/workflows/ci.yml/badge.svg)](https://github.com/h13/servicenow-app-template/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/h13/servicenow-app-template/blob/main/LICENSE)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D22-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-24%2B-green.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](https://www.typescriptlang.org/)
 [![ServiceNow SDK](https://img.shields.io/badge/ServiceNow%20SDK-Fluent-4285F4.svg)](https://servicenow.github.io/sdk/)
 
@@ -52,6 +52,34 @@
 | テンプレ同期 | 週次の上流同期（ツーリング更新を自動 PR）               |
 | サンプル     | CI 検証済みのビジネスルール + 単体テスト（`examples/`） |
 
+## 前提条件
+
+| ツール                         | バージョン | 用途                                                   |
+| ------------------------------ | ---------- | ------------------------------------------------------ |
+| [mise](https://mise.jdx.dev/)  | 最新       | ランタイムバージョン管理（Node.js を自動インストール） |
+| [Node.js](https://nodejs.org/) | 24+        | ランタイム（mise が自動管理）                          |
+| [pnpm](https://pnpm.io/)       | 11+        | パッケージマネージャ（`corepack enable` で自動有効化） |
+
+### インストール手順
+
+```bash
+# 1. mise をインストール（未導入の場合）
+brew install mise
+mise trust   # このリポジトリの .mise.toml を信頼
+
+# 2. Node.js は mise が自動管理（.mise.toml で node 24 を指定）
+mise install
+
+# 3. pnpm を有効化（corepack 経由）
+corepack enable
+
+# 4. 依存インストール
+pnpm install
+```
+
+> [!NOTE]
+> `mise` を使わない場合は Node.js 24 以上を手動でインストールしてください。
+
 ## クイックスタート
 
 ### 1. テンプレートからリポジトリを作成
@@ -82,6 +110,12 @@ pnpm install
 npx @servicenow/sdk auth --add https://<your-instance>.service-now.com
 ```
 
+ブラウザが開き、ServiceNow の SSO ログイン（MFA 含む）を完了すると、SDK の接続許可画面が表示されます。**Allow** をクリックしてアクセスを許可してください。Alias を聞かれたら、インスタンスの短い名前（例: `mydev`）を入力してください。
+
+> [!NOTE]
+> OAuth 認証にはインスタンス側に ServiceNow IDE の OAuth 設定が必要です。
+> 設定済みの認証情報は `npx @servicenow/sdk auth --list` で確認できます。
+
 ### 5. 既存アプリの取り込み
 
 ```bash
@@ -102,41 +136,52 @@ pnpm run build
 
 リポジトリの Settings → Environments → `dev` を作成し、以下を設定：
 
-| Secret                | 値                             |
-| --------------------- | ------------------------------ |
-| `SN_SDK_INSTANCE_URL` | dev インスタンスの URL         |
-| `SN_SDK_USER`         | サービスアカウントのユーザー名 |
-| `SN_SDK_USER_PWD`     | サービスアカウントのパスワード |
+| Secret / Variable            | 種別     | 説明                                       |
+| ---------------------------- | -------- | ------------------------------------------ |
+| `SN_SDK_INSTANCE_URL`        | Secret   | dev インスタンスの URL                     |
+| `SN_SDK_USER`                | Secret   | デプロイ用サービスアカウント               |
+| `SN_SDK_USER_PWD`            | Secret   | パスワード                                 |
+| `SN_SDK_OAUTH_CLIENT_ID`     | Secret   | OAuth 用 Client ID（OAuth 利用時のみ）     |
+| `SN_SDK_OAUTH_CLIENT_SECRET` | Secret   | OAuth 用 Client Secret（OAuth 利用時のみ） |
+| `SN_SDK_AUTH_TYPE`           | Variable | `basic`（デフォルト）または `oauth`        |
 
 **サービスアカウントの運用:** 個人アカウントではなく専用のサービスアカウントを
 使ってください — 監査・ローテーション・権限の絞り込みが容易になります。アプリの
 インストールには対象インスタンスの管理者相当の権限が必要なため、アカウントは
 dev インスタンスのみに限定し、パスワードは定期的にローテーションしてください。
 
-<details>
-<summary><b>可能なら OAuth を推奨（basic 認証の代替）</b></summary>
-
-SDK は CI での OAuth 2.0 `client_credentials` グラントもサポートしています。
-ユーザーパスワードがシークレットストアの外に出ることがなく、ローテーションも
-パスワードではなくクライアントシークレットの差し替えで済みます。
-
-1. インスタンス側: **System OAuth → Application Registry → New → Create an
-   OAuth API endpoint for external clients** を作成。_Public Client_ を `false`
-   にし、_OAuth Application User_ に専用の `sys_user`（_Identity Type = Human_、
-   アプリインストールに十分なロール付き）をマッピングし、_Client Credentials_
-   グラントタイプを有効化。
-2. システムプロパティ
-   `glide.oauth.inbound.client.credential.grant_type.enabled` を `true` に設定
-   （存在しない場合は `sys_properties` に作成 — ServiceNow KB1645212 参照）。
-3. `dev` environment に **variable** `SN_SDK_AUTH_TYPE=oauth` と、secrets
-   `SN_SDK_OAUTH_CLIENT_ID` / `SN_SDK_OAUTH_CLIENT_SECRET` を設定
-   （`SN_SDK_USER` / `SN_SDK_USER_PWD` は不要）。
-
-`deploy.yml` は自動的に切り替わります。
-
-</details>
+> [!TIP]
+> **可能なら OAuth を推奨（basic 認証の代替）。** SDK は CI での OAuth 2.0
+> `client_credentials` グラントもサポートしています。ユーザーパスワードが
+> シークレットストアの外に出ることがなく、ローテーションもパスワードではなく
+> クライアントシークレットの差し替えで済みます。
+>
+> 1. インスタンス側: **System OAuth → Application Registry → New → Create an
+>    OAuth API endpoint for external clients** を作成。_Public Client_ を
+>    `false` にし、_OAuth Application User_ に専用の `sys_user`（アプリ
+>    インストールに十分なロール付き）をマッピングし、_Client Credentials_
+>    グラントタイプを有効化。
+> 2. システムプロパティ
+>    `glide.oauth.inbound.client.credential.grant_type.enabled` を `true` に
+>    設定（存在しない場合は `sys_properties` に作成 — ServiceNow KB1645212
+>    参照）。
+> 3. `dev` environment に variable `SN_SDK_AUTH_TYPE=oauth` と、secrets
+>    `SN_SDK_OAUTH_CLIENT_ID` / `SN_SDK_OAUTH_CLIENT_SECRET` を設定
+>    （`SN_SDK_USER` / `SN_SDK_USER_PWD` は不要）。
+>
+> `deploy.yml` は自動的に切り替わります。
 
 ## 開発ワークフロー
+
+よく使うコマンド:
+
+```bash
+pnpm run check            # lint + typecheck + test（コミット前に実行）
+pnpm run build            # ServiceNow SDK ビルド
+pnpm run deploy           # ビルド + インストール（一括）
+```
+
+全コマンドは下の[コマンド](#コマンド)テーブルを参照してください。
 
 ```bash
 # Fluent コードまたはサーバースクリプトを編集

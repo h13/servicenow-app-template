@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/h13/servicenow-app-template/actions/workflows/ci.yml/badge.svg)](https://github.com/h13/servicenow-app-template/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/h13/servicenow-app-template/blob/main/LICENSE)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D22-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-24%2B-green.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](https://www.typescriptlang.org/)
 [![ServiceNow SDK](https://img.shields.io/badge/ServiceNow%20SDK-Fluent-4285F4.svg)](https://servicenow.github.io/sdk/)
 
@@ -52,6 +52,34 @@ The [ServiceNow SDK](https://servicenow.github.io/sdk/) makes this possible by l
 | Template sync | Weekly upstream sync (tooling updates auto-PR)       |
 | Example code  | CI-verified business rule + unit tests (`examples/`) |
 
+## Prerequisites
+
+| Tool                           | Version | Purpose                                              |
+| ------------------------------ | ------- | ---------------------------------------------------- |
+| [mise](https://mise.jdx.dev/)  | Latest  | Runtime version management (auto-installs Node.js)   |
+| [Node.js](https://nodejs.org/) | 24+     | Runtime (managed automatically by mise)              |
+| [pnpm](https://pnpm.io/)       | 11+     | Package manager (auto-enabled via `corepack enable`) |
+
+### Installation
+
+```bash
+# 1. Install mise (if not already installed)
+brew install mise
+mise trust   # Trust this repo's .mise.toml
+
+# 2. Node.js is managed by mise (.mise.toml specifies node 24)
+mise install
+
+# 3. Enable pnpm via corepack
+corepack enable
+
+# 4. Install dependencies
+pnpm install
+```
+
+> [!NOTE]
+> If you don't use `mise`, manually install Node.js 24 or later.
+
 ## Quick Start
 
 ### 1. Create a repo from this template
@@ -82,6 +110,12 @@ Edit `now.config.json`:
 npx @servicenow/sdk auth --add https://<your-instance>.service-now.com
 ```
 
+A browser window will open for SSO login (including MFA). After completing authentication, the SDK authorization screen will appear — click **Allow** to grant access. When prompted for an alias, enter a short name for the instance (e.g., `mydev`).
+
+> [!NOTE]
+> OAuth authentication requires the ServiceNow IDE OAuth configuration on the instance side.
+> You can verify configured credentials with `npx @servicenow/sdk auth --list`.
+
 ### 5. Pull an existing app
 
 ```bash
@@ -102,41 +136,50 @@ pnpm run build
 
 Create a `dev` environment in repo Settings → Environments with:
 
-| Secret                | Value                    |
-| --------------------- | ------------------------ |
-| `SN_SDK_INSTANCE_URL` | Your dev instance URL    |
-| `SN_SDK_USER`         | Service account username |
-| `SN_SDK_USER_PWD`     | Service account password |
+| Secret / Variable            | Type     | Description                      |
+| ---------------------------- | -------- | -------------------------------- |
+| `SN_SDK_INSTANCE_URL`        | Secret   | Your dev instance URL            |
+| `SN_SDK_USER`                | Secret   | Service account username         |
+| `SN_SDK_USER_PWD`            | Secret   | Service account password         |
+| `SN_SDK_OAUTH_CLIENT_ID`     | Secret   | OAuth Client ID (OAuth only)     |
+| `SN_SDK_OAUTH_CLIENT_SECRET` | Secret   | OAuth Client Secret (OAuth only) |
+| `SN_SDK_AUTH_TYPE`           | Variable | `basic` (default) or `oauth`     |
 
 **Service account hygiene:** use a dedicated service account, not a personal
 one — it makes auditing, rotation, and narrowing roles straightforward.
 Installing an app requires admin-level rights on the target instance, so scope
 the account to the dev instance only and rotate the password regularly.
 
-<details>
-<summary><b>Prefer OAuth over basic auth (recommended where possible)</b></summary>
-
-The SDK also supports the OAuth 2.0 `client_credentials` grant in CI — no user
-password ever leaves your secret store, and rotating means rotating a client
-secret instead of a password.
-
-1. On the instance: **System OAuth → Application Registry → New → Create an
-   OAuth API endpoint for external clients**. Set _Public Client_ to `false`,
-   map an _OAuth Application User_ (a dedicated `sys_user` with
-   _Identity Type = Human_ and roles sufficient to install apps), and enable
-   the _Client Credentials_ grant type.
-2. Set the system property
-   `glide.oauth.inbound.client.credential.grant_type.enabled` to `true`
-   (create it in `sys_properties` if missing — see ServiceNow KB1645212).
-3. In the `dev` environment: add the **variable** `SN_SDK_AUTH_TYPE=oauth`
-   and the secrets `SN_SDK_OAUTH_CLIENT_ID` / `SN_SDK_OAUTH_CLIENT_SECRET`
-   (replacing `SN_SDK_USER` / `SN_SDK_USER_PWD`).
-
-`deploy.yml` picks up the switch automatically.
-
-</details>
+> [!TIP]
+> **Prefer OAuth over basic auth where possible.** The SDK supports the OAuth
+> 2.0 `client_credentials` grant in CI — no user password ever leaves your
+> secret store, and rotating means rotating a client secret instead of a
+> password. To use OAuth:
+>
+> 1. On the instance: **System OAuth → Application Registry → New → Create an
+>    OAuth API endpoint for external clients**. Set _Public Client_ to `false`,
+>    map an _OAuth Application User_ (a dedicated `sys_user` with roles
+>    sufficient to install apps), and enable the _Client Credentials_ grant type.
+> 2. Set the system property
+>    `glide.oauth.inbound.client.credential.grant_type.enabled` to `true`
+>    (create it in `sys_properties` if missing — see ServiceNow KB1645212).
+> 3. Set environment variable `SN_SDK_AUTH_TYPE=oauth` and add the
+>    `SN_SDK_OAUTH_CLIENT_ID` / `SN_SDK_OAUTH_CLIENT_SECRET` secrets
+>    (`SN_SDK_USER` / `SN_SDK_USER_PWD` are not needed in this case).
+>
+> `deploy.yml` picks up the switch automatically.
 
 ## Development Workflow
+
+Most-used commands at a glance:
+
+```bash
+pnpm run check            # lint + typecheck + test (run before committing)
+pnpm run build            # ServiceNow SDK build
+pnpm run deploy           # build + install to instance (one command)
+```
+
+See the full [Commands](#commands) table below for all available scripts.
 
 ```bash
 # Edit Fluent code or server scripts
