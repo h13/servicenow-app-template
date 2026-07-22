@@ -1,0 +1,5 @@
+# Project-level markdownlint overrides
+
+ignores:
+  - .github/ISSUE_TEMPLATE/**
+  - .github/pull_request_template.md

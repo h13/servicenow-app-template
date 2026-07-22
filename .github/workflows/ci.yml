@@ -26,11 +26,22 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
+      - name: Format check
+        run: pnpm run format:check
+
       - name: Typecheck
         run: pnpm run typecheck
 
       - name: Test
-        run: pnpm run test
+        run: pnpm run test:coverage
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
 
   frozen-keys:
     if: github.event.repository.is_template != true
