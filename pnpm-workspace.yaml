@@ -1,3 +1,9 @@
+# Supply-chain: require packages to be at least 7 days old before installing.
+# This complements Renovate's minimumReleaseAge (7 days) as a second gate —
+# even if Renovate creates a PR early (known grouped-update bug), pnpm will
+# reject packages that haven't aged sufficiently in CI.
+minimumReleaseAge: 10080
+
 # pnpm v11 requires an explicit build-script policy for dependencies that ship
 # lifecycle scripts (ERR_PNPM_IGNORED_BUILDS otherwise). These native deps are
 # pulled transitively (mainly via @servicenow/sdk) and were never built under
