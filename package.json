@@ -18,11 +18,13 @@
     "lint": "oxlint --fix src test examples",
     "pack": "now-sdk pack",
     "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --passWithNoTests --coverage",
     "transform": "now-sdk transform --from .",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@servicenow/sdk": "4.9.0",
+    "@vitest/coverage-v8": "4.1.10",
     "oxfmt": "0.59.0",
     "oxlint": "1.74.0",
     "typescript": "7.0.2",
