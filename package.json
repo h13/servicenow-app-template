@@ -13,6 +13,7 @@
     "deploy": "pnpm run build && pnpm run install:instance",
     "download": "now-sdk download .",
     "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
     "install:instance": "now-sdk install",
     "lint": "oxlint --fix src test examples",
     "pack": "now-sdk pack",
