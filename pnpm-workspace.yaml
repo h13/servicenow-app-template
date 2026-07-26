@@ -14,8 +14,3 @@ allowBuilds:
   '@swc/core': false
   esbuild: false
   libxmljs2: false
-minimumReleaseAgeExclude:
-  # Renovate security update: oxfmt@0.60.0
-  - oxfmt@0.60.0
-  # Renovate security update: oxlint@1.75.0
-  - oxlint@1.75.0
