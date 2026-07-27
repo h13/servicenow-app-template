@@ -1,0 +1,14 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - v*
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    uses: h13/.github/.github/workflows/publish-node.yml@7141d492cdca879890926d73ba1136484f3f4867 # main
+    secrets: inherit
