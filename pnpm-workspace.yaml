@@ -17,3 +17,5 @@ allowBuilds:
 minimumReleaseAgeExclude:
   # Renovate security update: pnpm@11.18.0 || 11.20.0
   - pnpm@11.18.0 || 11.20.0
+  # Renovate security update: @servicenow/sdk@4.10.1
+  - "@servicenow/sdk@4.10.1"
