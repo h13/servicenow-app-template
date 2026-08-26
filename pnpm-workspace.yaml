@@ -17,3 +17,5 @@ allowBuilds:
 minimumReleaseAgeExclude:
   # Renovate security update: pnpm@11.18.0 || 11.20.0 || 11.21.0 || 11.22.0 || 11.23.0 || 11.24.0
   - pnpm@11.18.0 || 11.20.0 || 11.21.0 || 11.22.0 || 11.23.0 || 11.24.0
+  # Renovate security update: vitest@4.1.11
+  - vitest@4.1.11
