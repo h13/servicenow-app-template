@@ -23,7 +23,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@servicenow/sdk": "4.9.0",
+    "@servicenow/sdk": "4.11.2",
     "@vitest/coverage-v8": "4.1.10",
     "oxfmt": "0.59.0",
     "oxlint": "1.74.0",
