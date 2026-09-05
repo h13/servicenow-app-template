@@ -20,3 +20,5 @@ minimumReleaseAgeExclude:
     11.25.0
   # Renovate security update: vitest@4.1.11
   - vitest@4.1.11
+  # Renovate security update: @servicenow/sdk@4.11.2
+  - "@servicenow/sdk@4.11.2"
