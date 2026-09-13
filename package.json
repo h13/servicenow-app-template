@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@servicenow/sdk": "4.9.0",
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "4.1.11",
     "oxfmt": "0.59.0",
     "oxlint": "1.74.0",
     "typescript": "7.0.2",
