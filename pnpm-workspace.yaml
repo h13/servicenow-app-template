@@ -22,3 +22,5 @@ minimumReleaseAgeExclude:
   - vitest@4.1.11 || 5.0.1
   # Renovate security update: @vitest/coverage-v8@4.1.11 || 5.0.1 || 5.0.2
   - '@vitest/coverage-v8@4.1.11 || 5.0.1 || 5.0.2'
+  # Renovate security update: @servicenow/sdk@4.13.0
+  - "@servicenow/sdk@4.13.0"
