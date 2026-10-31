@@ -27,3 +27,5 @@ minimumReleaseAgeExclude:
   - oxfmt@0.72.0 || 0.74.0
   # Renovate security update: oxlint@1.87.0 || 1.89.0
   - oxlint@1.87.0 || 1.89.0
+  # Renovate security update: @servicenow/sdk@4.14.0
+  - "@servicenow/sdk@4.14.0"
