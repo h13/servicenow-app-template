@@ -23,7 +23,7 @@ minimumReleaseAgeExclude:
   - vitest@4.1.11 || 5.0.1 || 5.0.3 || 5.0.5
   # Renovate security update: @vitest/coverage-v8@4.1.11 || 5.0.1 || 5.0.2 || 5.0.3 || 5.0.4 || 5.0.5
   - '@vitest/coverage-v8@4.1.11 || 5.0.1 || 5.0.2 || 5.0.3 || 5.0.4 || 5.0.5'
-  # Renovate security update: oxfmt@0.72.0 || 0.74.0
-  - oxfmt@0.72.0 || 0.74.0
-  # Renovate security update: oxlint@1.87.0 || 1.89.0
-  - oxlint@1.87.0 || 1.89.0
+  # Renovate security update: oxfmt@0.72.0 || 0.74.0 || 0.75.0
+  - oxfmt@0.72.0 || 0.74.0 || 0.75.0
+  # Renovate security update: oxlint@1.87.0 || 1.89.0 || 1.90.0
+  - oxlint@1.87.0 || 1.89.0 || 1.90.0
