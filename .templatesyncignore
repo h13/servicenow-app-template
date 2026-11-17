@@ -9,8 +9,6 @@
 :!.oxlintrc.json
 :!.oxfmtrc.json
 :!tsconfig.json
-:!package.json
-:!pnpm-workspace.yaml
 :!.editorconfig
 :!.mise.toml
 :!renovate.json
