@@ -27,15 +27,39 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      # SN_SDK_AUTH_TYPE (basic/oauth) is not used: both POST /angular.do to
+      # obtain a UI session, which fails with 401 for web_service_access_only
+      # deploy users. Instead, fetch an OAuth client_credentials token directly
+      # and hand it to the SDK via SN_SDK_SESSION_BEARER_TOKEN, which skips the
+      # login flow entirely (see README "Configure CI/CD secrets").
       - name: Install to instance
         env:
-          SN_SDK_NODE_ENV: SN_SDK_CI_INSTALL
-          # Set the SN_SDK_AUTH_TYPE environment *variable* to `oauth` on the
-          # `dev` environment to switch to OAuth client_credentials (see README).
-          SN_SDK_AUTH_TYPE: ${{ vars.SN_SDK_AUTH_TYPE || 'basic' }}
-          SN_SDK_INSTANCE_URL: ${{ secrets.SN_SDK_INSTANCE_URL }}
-          SN_SDK_USER: ${{ secrets.SN_SDK_USER }}
-          SN_SDK_USER_PWD: ${{ secrets.SN_SDK_USER_PWD }}
-          SN_SDK_OAUTH_CLIENT_ID: ${{ secrets.SN_SDK_OAUTH_CLIENT_ID }}
-          SN_SDK_OAUTH_CLIENT_SECRET: ${{ secrets.SN_SDK_OAUTH_CLIENT_SECRET }}
-        run: pnpm run install:instance
+          INSTANCE_URL: ${{ vars.SN_SDK_INSTANCE_URL }}
+          CLIENT_ID: ${{ vars.SN_SDK_OAUTH_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.SN_SDK_OAUTH_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+
+          INSTANCE="${INSTANCE_URL%/}"
+
+          body=$(jq -rn '
+            "grant_type=client_credentials"
+            + "&client_id=" + (env.CLIENT_ID | @uri)
+            + "&client_secret=" + (env.CLIENT_SECRET | @uri)
+          ')
+
+          response=$(printf '%s' "$body" | curl -sS \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data @- "$INSTANCE/oauth_token.do")
+
+          token=$(printf '%s' "$response" | jq -r '.access_token // empty')
+          if [ -z "$token" ]; then
+            echo 'failed to get an access token:'
+            printf '%s' "$response" | jq -r '{error, error_description}' \
+              || printf '%s\n' "$response"
+            exit 1
+          fi
+          echo "::add-mask::$token"
+
+          SN_SDK_INSTANCE_URL="$INSTANCE" SN_SDK_SESSION_BEARER_TOKEN="$token" \
+            pnpm run install:instance

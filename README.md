@@ -134,40 +134,48 @@ pnpm run build
 
 ### 6. Configure CI/CD secrets
 
-Create a `dev` environment in repo Settings → Environments with:
+CI deploys with the OAuth 2.0 `client_credentials` grant — no user password
+ever leaves your secret store, and rotating means rotating a client secret
+instead of a password.
 
-| Secret / Variable            | Type     | Description                      |
-| ---------------------------- | -------- | -------------------------------- |
-| `SN_SDK_INSTANCE_URL`        | Secret   | Your dev instance URL            |
-| `SN_SDK_USER`                | Secret   | Service account username         |
-| `SN_SDK_USER_PWD`            | Secret   | Service account password         |
-| `SN_SDK_OAUTH_CLIENT_ID`     | Secret   | OAuth Client ID (OAuth only)     |
-| `SN_SDK_OAUTH_CLIENT_SECRET` | Secret   | OAuth Client Secret (OAuth only) |
-| `SN_SDK_AUTH_TYPE`           | Variable | `basic` (default) or `oauth`     |
+Set up the instance side first:
+
+1. On the instance: **System OAuth → Application Registry → New → Create an
+   OAuth API endpoint for external clients**. Set _Public Client_ to `false`,
+   map an _OAuth Application User_ (a dedicated `sys_user` with roles
+   sufficient to install apps), and enable the _Client Credentials_ grant type.
+2. Set the system property
+   `glide.oauth.inbound.client.credential.grant_type.enabled` to `true`
+   (create it in `sys_properties` if missing — see ServiceNow KB1645212).
+
+Then create a `dev` environment in repo Settings → Environments with:
+
+| Secret / Variable            | Type     | Description           |
+| ---------------------------- | -------- | --------------------- |
+| `SN_SDK_INSTANCE_URL`        | Variable | Your dev instance URL |
+| `SN_SDK_OAUTH_CLIENT_ID`     | Variable | OAuth Client ID       |
+| `SN_SDK_OAUTH_CLIENT_SECRET` | Secret   | OAuth Client Secret   |
+
+Only the client secret is a secret. The instance URL and client ID are
+identifiers, and making them secrets just turns them into `***` in logs.
 
 **Service account hygiene:** use a dedicated service account, not a personal
 one — it makes auditing, rotation, and narrowing roles straightforward.
 Installing an app requires admin-level rights on the target instance, so scope
-the account to the dev instance only and rotate the password regularly.
+the account to the dev instance only. Mark it `web_service_access_only` so it
+cannot log in interactively (on some license models this also keeps it out of
+per-user billing).
 
-> [!TIP]
-> **Prefer OAuth over basic auth where possible.** The SDK supports the OAuth
-> 2.0 `client_credentials` grant in CI — no user password ever leaves your
-> secret store, and rotating means rotating a client secret instead of a
-> password. To use OAuth:
->
-> 1. On the instance: **System OAuth → Application Registry → New → Create an
->    OAuth API endpoint for external clients**. Set _Public Client_ to `false`,
->    map an _OAuth Application User_ (a dedicated `sys_user` with roles
->    sufficient to install apps), and enable the _Client Credentials_ grant type.
-> 2. Set the system property
->    `glide.oauth.inbound.client.credential.grant_type.enabled` to `true`
->    (create it in `sys_properties` if missing — see ServiceNow KB1645212).
-> 3. Set environment variable `SN_SDK_AUTH_TYPE=oauth` and add the
->    `SN_SDK_OAUTH_CLIENT_ID` / `SN_SDK_OAUTH_CLIENT_SECRET` secrets
->    (`SN_SDK_USER` / `SN_SDK_USER_PWD` are not needed in this case).
->
-> `deploy.yml` picks up the switch automatically.
+> [!NOTE]
+> **Why `deploy.yml` fetches the token itself instead of using
+> `SN_SDK_AUTH_TYPE`.** The SDK's built-in `basic` and `oauth` flows both POST
+> `/angular.do` to convert the credentials into a UI session, which fails with
+> 401 for `web_service_access_only` users (`oauth` gets as far as the token).
+> `deploy.yml` therefore requests the token from `oauth_token.do` directly and
+> passes it via `SN_SDK_SESSION_BEARER_TOKEN`, which the SDK's
+> `getCiCredentials()` picks up first — skipping the login flow and calling the
+> Table API with the Bearer header as-is. No UI session, no _Identity Type_
+> constraint on the OAuth Application User.
 
 ## Development Workflow
 
