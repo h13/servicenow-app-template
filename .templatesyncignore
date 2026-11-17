@@ -10,7 +10,6 @@
 :!.oxfmtrc.json
 :!tsconfig.json
 :!.editorconfig
-:!.mise.toml
 :!renovate.json
 
 # Meta
