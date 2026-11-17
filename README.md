@@ -355,7 +355,9 @@ them.
 
 The `sync-template.yml` workflow checks for upstream template updates weekly. When updates are found, a PR with the `template-sync` label is created automatically.
 
-`.templatesyncignore` uses a whitelist format — only listed files (workflows, tooling configs, and `examples/`) are synced. Your source code, tests, `now.config.json`, and `README.md` are never overwritten.
+`.templatesyncignore` uses a whitelist format — only listed files (tooling configs, `examples/`, and meta files) are synced. Your source code, tests, `now.config.json`, `.gitignore`, and `README.md` are never overwritten.
+
+CI/CD workflow files are not synced: GitHub rejects workflow pushes from the default Actions token. Version bumps inside them (action SHAs) arrive via Renovate; changes to the CI logic itself are adopted per repo deliberately.
 
 ### Renovate
 

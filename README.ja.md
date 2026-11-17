@@ -357,7 +357,9 @@ your-app/
 
 `sync-template.yml` ワークフローが週次で上流テンプレートの更新をチェックします。更新がある場合、`template-sync` ラベル付きの PR が自動作成されます。
 
-`.templatesyncignore` はホワイトリスト形式 — リストされたファイル（ワークフロー、ツーリング設定、`examples/`）のみが同期対象です。ソースコード、テスト、`now.config.json`、`README.md` は上書きされません。
+`.templatesyncignore` はホワイトリスト形式 — リストされたファイル（ツーリング設定、`examples/`、メタファイル）のみが同期対象です。ソースコード、テスト、`now.config.json`、`.gitignore`、`README.md` は上書きされません。
+
+CI/CD のワークフローファイルは同期対象外です。GitHub は Actions の既定トークンによるワークフローファイルの push を拒否するためです。ファイル内のバージョン更新（actions の SHA）は Renovate が担い、CI ロジック自体の変更は各リポジトリで意図的に取り込みます。
 
 ### Renovate
 
