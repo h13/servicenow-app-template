@@ -134,42 +134,50 @@ pnpm run build
 
 ### 6. CI/CD シークレットの設定
 
-リポジトリの Settings → Environments → `dev` を作成し、以下を設定：
+CI のデプロイは OAuth 2.0 `client_credentials` グラントで行います。ユーザー
+パスワードがシークレットストアの外に出ることがなく、ローテーションもパスワード
+ではなくクライアントシークレットの差し替えで済みます。
 
-| Secret / Variable            | 種別     | 説明                                       |
-| ---------------------------- | -------- | ------------------------------------------ |
-| `SN_SDK_INSTANCE_URL`        | Secret   | dev インスタンスの URL                     |
-| `SN_SDK_USER`                | Secret   | デプロイ用サービスアカウント               |
-| `SN_SDK_USER_PWD`            | Secret   | パスワード                                 |
-| `SN_SDK_OAUTH_CLIENT_ID`     | Secret   | OAuth 用 Client ID（OAuth 利用時のみ）     |
-| `SN_SDK_OAUTH_CLIENT_SECRET` | Secret   | OAuth 用 Client Secret（OAuth 利用時のみ） |
-| `SN_SDK_AUTH_TYPE`           | Variable | `basic`（デフォルト）または `oauth`        |
+まずインスタンス側を設定：
+
+1. インスタンス側: **System OAuth → Application Registry → New → Create an
+   OAuth API endpoint for external clients** を作成。_Public Client_ を
+   `false` にし、_OAuth Application User_ に専用の `sys_user`（アプリ
+   インストールに十分なロール付き）をマッピングし、_Client Credentials_
+   グラントタイプを有効化。
+2. システムプロパティ
+   `glide.oauth.inbound.client.credential.grant_type.enabled` を `true` に
+   設定（存在しない場合は `sys_properties` に作成 — ServiceNow KB1645212
+   参照）。
+
+次にリポジトリの Settings → Environments → `dev` を作成し、以下を設定：
+
+| Secret / Variable            | 種別     | 説明                   |
+| ---------------------------- | -------- | ---------------------- |
+| `SN_SDK_INSTANCE_URL`        | Variable | dev インスタンスの URL |
+| `SN_SDK_OAUTH_CLIENT_ID`     | Variable | OAuth 用 Client ID     |
+| `SN_SDK_OAUTH_CLIENT_SECRET` | Secret   | OAuth 用 Client Secret |
+
+Secret にするのは client secret だけです。インスタンス URL と client ID は
+識別子であり、Secret にするとログで `***` に置き換わって読めなくなるだけです。
 
 **サービスアカウントの運用:** 個人アカウントではなく専用のサービスアカウントを
 使ってください — 監査・ローテーション・権限の絞り込みが容易になります。アプリの
 インストールには対象インスタンスの管理者相当の権限が必要なため、アカウントは
-dev インスタンスのみに限定し、パスワードは定期的にローテーションしてください。
+dev インスタンスのみに限定してください。対話ログインを封じるため
+`web_service_access_only` を有効にします（ライセンスモデルによっては、これが
+ユーザー課金の対象外になる条件でもあります）。
 
-> [!TIP]
-> **可能なら OAuth を推奨（basic 認証の代替）。** SDK は CI での OAuth 2.0
-> `client_credentials` グラントもサポートしています。ユーザーパスワードが
-> シークレットストアの外に出ることがなく、ローテーションもパスワードではなく
-> クライアントシークレットの差し替えで済みます。
->
-> 1. インスタンス側: **System OAuth → Application Registry → New → Create an
->    OAuth API endpoint for external clients** を作成。_Public Client_ を
->    `false` にし、_OAuth Application User_ に専用の `sys_user`（アプリ
->    インストールに十分なロール付き）をマッピングし、_Client Credentials_
->    グラントタイプを有効化。
-> 2. システムプロパティ
->    `glide.oauth.inbound.client.credential.grant_type.enabled` を `true` に
->    設定（存在しない場合は `sys_properties` に作成 — ServiceNow KB1645212
->    参照）。
-> 3. `dev` environment に variable `SN_SDK_AUTH_TYPE=oauth` と、secrets
->    `SN_SDK_OAUTH_CLIENT_ID` / `SN_SDK_OAUTH_CLIENT_SECRET` を設定
->    （`SN_SDK_USER` / `SN_SDK_USER_PWD` は不要）。
->
-> `deploy.yml` は自動的に切り替わります。
+> [!NOTE]
+> **`deploy.yml` が `SN_SDK_AUTH_TYPE` を使わず自前でトークンを取る理由。**
+> SDK 内蔵の `basic` / `oauth` フローはどちらも認証の途中で `/angular.do` を
+> POST して UI セッションに変換するため、`web_service_access_only` なユーザー
+> では 401 になります（`oauth` はトークン取得までは成功します）。そのため
+> `deploy.yml` は `oauth_token.do` から直接トークンを取得し、
+> `SN_SDK_SESSION_BEARER_TOKEN` で SDK に渡しています。SDK の
+> `getCiCredentials()` はこの環境変数を最初に評価してログイン処理を丸ごと
+> 飛ばし、Bearer ヘッダのまま Table API を叩くため、UI セッションを必要と
+> しません。OAuth Application User の _Identity Type_ の制約も受けません。
 
 ## 開発ワークフロー
 

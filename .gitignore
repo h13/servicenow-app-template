@@ -8,6 +8,8 @@ coverage/
 
 # ServiceNow SDK
 .now-sdk/
+# Build output regenerated on every build
+.now/bom.json
 
 # OS
 .DS_Store

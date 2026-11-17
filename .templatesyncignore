@@ -24,7 +24,7 @@
 :!.templatesyncignore
 :!.gitignore
 :!.gitleaks.toml
-:!_typos.toml
+:!:_typos.toml
 :!CONTRIBUTING.md
 :!LICENSE
 
