@@ -371,6 +371,8 @@ CI/CD のワークフローファイルは同期対象外です。GitHub は Act
 - 7 日間の安定性バッファ
 - 毎週日曜に実行
 
+このテンプレートから作成したリポジトリでは [Renovate アプリ](https://github.com/apps/renovate) のインストールが必要（[導入手順](https://docs.renovatebot.com/getting-started/installing-onboarding/)）。
+
 ## FAQ
 
 ### 新規アプリ（グリーンフィールド）でも使える？

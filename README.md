@@ -369,6 +369,8 @@ Configured via [`h13/renovate-config:node`](https://github.com/h13/renovate-conf
 - 7-day stability buffer
 - Runs weekly on Sunday
 
+Repositories created from this template need the [Renovate app](https://github.com/apps/renovate) installed — see the [installation guide](https://docs.renovatebot.com/getting-started/installing-onboarding/).
+
 ## FAQ
 
 ### Can I use this for a new app (greenfield)?
