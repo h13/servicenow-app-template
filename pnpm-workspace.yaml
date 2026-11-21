@@ -25,9 +25,9 @@ minimumReleaseAgeExclude:
   # Renovate security update: @vitest/coverage-v8@4.1.11 || 5.0.1 || 5.0.2 || 5.0.3 || 5.0.4 || 5.0.5 || 5.1.0 || 5.1.1
   - '@vitest/coverage-v8@4.1.11 || 5.0.1 || 5.0.2 || 5.0.3 || 5.0.4 || 5.0.5 ||
     5.1.0 || 5.1.1'
-  # Renovate security update: oxfmt@0.72.0 || 0.74.0 || 0.75.0
-  - oxfmt@0.72.0 || 0.74.0 || 0.75.0
-  # Renovate security update: oxlint@1.87.0 || 1.89.0 || 1.90.0
-  - oxlint@1.87.0 || 1.89.0 || 1.90.0
+  # Renovate security update: oxfmt@0.72.0 || 0.74.0 || 0.75.0 || 0.79.0
+  - oxfmt@0.72.0 || 0.74.0 || 0.75.0 || 0.79.0
+  # Renovate security update: oxlint@1.87.0 || 1.89.0 || 1.90.0 || 1.94.0
+  - oxlint@1.87.0 || 1.89.0 || 1.90.0 || 1.94.0
   # Renovate security update: @servicenow/sdk@4.14.0 || 4.14.2
   - '@servicenow/sdk@4.14.0 || 4.14.2'
